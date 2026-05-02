@@ -7,16 +7,16 @@ class Transcriber < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/RedAtman/transcriber/releases/download/v0.1.4/transcriber-macos-aarch64"
-      sha256 "7dee3fb0cc388bc5e6e1d81aa3e8592d38469ab766fa098a1b77443192332438"
+      url "https://github.com/RedAtman/transcriber/releases/download/v0.1.2/transcriber-macos-aarch64"
+      sha256 "1eb9e98579a9977b951b4eea9700af996ef9bebf6d208ea5bf0fe95ca242c231"
 
       def install
         bin.install "transcriber-macos-aarch64" => "transcriber"
       end
     end
     on_intel do
-      url "https://github.com/RedAtman/transcriber/releases/download/v0.1.4/transcriber-macos-x86_64"
-      sha256 "7dee3fb0cc388bc5e6e1d81aa3e8592d38469ab766fa098a1b77443192332438"
+      url "https://github.com/RedAtman/transcriber/releases/download/v0.1.2/transcriber-macos-x86_64"
+      sha256 "1eb9e98579a9977b951b4eea9700af996ef9bebf6d208ea5bf0fe95ca242c231"
 
       def install
         bin.install "transcriber-macos-x86_64" => "transcriber"
@@ -25,8 +25,8 @@ class Transcriber < Formula
   end
 
   on_linux do
-    url "https://github.com/RedAtman/transcriber/releases/download/v0.1.4/transcriber-linux-x86_64"
-    sha256 "a2fddb761417ba968ece0c85b86077c9941fe339d2c627e060acf8a05dd1edac"
+    url "https://github.com/RedAtman/transcriber/releases/download/v0.1.2/transcriber-linux-x86_64"
+    sha256 "9ada3044b049af9522fe6abdb8af5db0aba6fa351ff50525aae07454108ba36d"
 
     def install
       bin.install "transcriber-linux-x86_64" => "transcriber"
