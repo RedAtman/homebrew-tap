@@ -1,0 +1,39 @@
+name: Bump formulae
+
+on:
+  schedule:
+    # Daily, off the top of the hour: GitHub-hosted cron queues are congested
+    # at :00 and a delayed bump is harmless.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialised: two runs rewriting the same formulae would push one stale commit.
+concurrency:
+  group: bump-formulae
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      # gh reads the public source repos and pushes nothing; the commit below
+      # uses this repo's own GITHUB_TOKEN, so no PAT is stored anywhere.
+      - name: Bump formulae to the latest upstream releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/bump_formulae.py
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "formulae already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula
+          git commit -m "chore: bump formulae to latest upstream releases"
+          git push
