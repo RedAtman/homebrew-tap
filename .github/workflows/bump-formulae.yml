@@ -3,8 +3,14 @@ name: Bump formulae
 on:
   schedule:
     # Daily, off the top of the hour: GitHub-hosted cron queues are congested
-    # at :00 and a delayed bump is harmless.
+    # at :00 and a delayed bump is harmless. Also the safety net for a release
+    # whose dispatch never arrived.
     - cron: "17 3 * * *"
+  # Sent by each tracked project's release workflow once its assets are
+  # uploaded. The sender only signals; this workflow is the only writer of
+  # Formula/, so a formula's text keeps belonging to the tap.
+  repository_dispatch:
+    types: [formula-bump]
   workflow_dispatch:
 
 permissions:
