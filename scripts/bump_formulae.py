@@ -16,10 +16,17 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 
 # Projects whose formula is Formula/<repo name>.rb. Adding a project means
 # adding its name here; an absent formula is a hard error, not a silent skip.
 PROJECTS = ["RedAtman/mediakit", "RedAtman/transcriber"]
+
+# A release is created before its per-platform assets finish uploading, so a
+# run that lands mid-upload sees an incomplete release. Younger than this it is
+# treated as "still uploading" and retried; older, a missing asset is real
+# breakage and fails the run.
+UPLOAD_GRACE = timedelta(hours=24)
 
 URL_RE = re.compile(
     r'(?P<prefix>^\s*url "https://github\.com/[^"]+/releases/download/)'
@@ -34,16 +41,31 @@ def gh(*args: str) -> str:
     ).stdout
 
 
-def latest_tag(repo: str) -> str:
+def latest_release(repo: str) -> dict:
     # Prereleases are filtered out rather than taken on trust: a tag like
     # v1.2.3-rc1 must never become the version a tap user installs.
     releases = json.loads(
-        gh("release", "list", "-R", repo, "--limit", "30", "--json", "tagName,isPrerelease")
+        gh(
+            "release",
+            "list",
+            "-R",
+            repo,
+            "--limit",
+            "30",
+            "--json",
+            "tagName,isPrerelease,publishedAt",
+        )
     )
     stable = [r for r in releases if not r["isPrerelease"]]
     if not stable:
         raise SystemExit(f"{repo}: no non-prerelease release found")
-    return stable[0]["tagName"]
+    latest = stable[0]
+    # `release list` cannot report assets, so the chosen release is looked up
+    # again to see which uploads have landed.
+    latest["assets"] = json.loads(
+        gh("release", "view", latest["tagName"], "-R", repo, "--json", "assets")
+    )["assets"]
+    return latest
 
 
 def asset_shas(repo: str, tag: str, assets: list[str]) -> dict[str, str]:
@@ -56,12 +78,13 @@ def asset_shas(repo: str, tag: str, assets: list[str]) -> dict[str, str]:
         }
 
 
-def bump(repo: str) -> bool:
+def bump(repo: str) -> None:
     formula = pathlib.Path("Formula") / f"{repo.split('/')[1]}.rb"
     if not formula.is_file():
         raise SystemExit(f"{repo}: {formula} does not exist")
 
-    tag = latest_tag(repo)
+    release = latest_release(repo)
+    tag = release["tagName"]
     lines = formula.read_text().splitlines(keepends=True)
     urls = [m for m in (URL_RE.match(line) for line in lines) if m]
     if not urls:
@@ -69,9 +92,18 @@ def bump(repo: str) -> bool:
 
     if {m.group("tag") for m in urls} == {tag}:
         print(f"{repo}: already at {tag}")
-        return False
+        return
 
     assets = list(dict.fromkeys(m.group("asset") for m in urls))
+    uploading = [a for a in assets if a not in {x["name"] for x in release["assets"]}]
+    if uploading:
+        published = datetime.fromisoformat(release["publishedAt"].replace("Z", "+00:00"))
+        age = datetime.now(timezone.utc) - published
+        if age < UPLOAD_GRACE:
+            print(f"::warning::{repo}: {tag} still uploading {uploading}, retrying on the next run")
+            return
+        raise SystemExit(f"{repo}: {tag} published {age} ago and still missing {uploading}")
+
     shas = asset_shas(repo, tag, assets)
 
     out: list[str] = []
@@ -93,7 +125,6 @@ def bump(repo: str) -> bool:
 
     formula.write_text("".join(out))
     print(f"{repo}: bumped to {tag} ({len(assets)} assets)")
-    return True
 
 
 def main() -> int:
