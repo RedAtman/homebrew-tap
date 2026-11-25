@@ -7,16 +7,16 @@ class Mediakit < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/RedAtman/mediakit/releases/download/v0.1.7/mediakit-macos-arm64"
-      sha256 "af51b8cb7d5859c92364f2cb09143e47e116445d19ee9510e05c7e8a3afaabcf"
+      url "https://github.com/RedAtman/mediakit/releases/download/v0.1.8/mediakit-macos-arm64"
+      sha256 "c5dcbdf17add4cd3352c2777393e6d92a0f40d3c8c63dc66bfa7127116dcb792"
 
       def install
         bin.install "mediakit-macos-arm64" => "mediakit"
       end
     end
     on_intel do
-      url "https://github.com/RedAtman/mediakit/releases/download/v0.1.7/mediakit-macos-x86_64"
-      sha256 "cb8c637e381665fe35faa179be72d99d8717358a732e5cea9efcc81598de9e73"
+      url "https://github.com/RedAtman/mediakit/releases/download/v0.1.8/mediakit-macos-x86_64"
+      sha256 "fc9a79ee6f5187e7d03987f787ab54d59416e3c42746ae31a044ed6554676c2a"
 
       def install
         bin.install "mediakit-macos-x86_64" => "mediakit"
@@ -25,8 +25,8 @@ class Mediakit < Formula
   end
 
   on_linux do
-    url "https://github.com/RedAtman/mediakit/releases/download/v0.1.7/mediakit-linux-x86_64"
-    sha256 "8e1313cea1c40b6c60cc0175ab260cb02eb3528d4fd77746ca2374e2edadc7a9"
+    url "https://github.com/RedAtman/mediakit/releases/download/v0.1.8/mediakit-linux-x86_64"
+    sha256 "092d390bcf2576f66dbe4b243844e3a1fad5a27458ddb61f40b5c1485305c69f"
 
     def install
       bin.install "mediakit-linux-x86_64" => "mediakit"
